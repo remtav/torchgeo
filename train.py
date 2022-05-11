@@ -27,6 +27,7 @@ from torchgeo.datamodules import (
     SEN12MSDataModule,
     So2SatDataModule,
     UCMercedDataModule,
+    Potsdam2DDataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
@@ -49,6 +50,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
     "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "potsdam": (SemanticSegmentationTask, Potsdam2DDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),

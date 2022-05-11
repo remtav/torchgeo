@@ -57,6 +57,7 @@ class Potsdam2D(VisionDataset):
     filenames = ["4_Ortho_RGBIR.zip", "5_Labels_all.zip"]
     md5s = ["c4a8f7d8c7196dd4eba4addd0aae10c1", "cf7403c1a97c0d279414db"]
     image_root = "4_Ortho_RGBIR"
+    mask_root = "5_Labels_all"
     splits = {
         "train": [
             "top_potsdam_2_10",
@@ -145,7 +146,7 @@ class Potsdam2D(VisionDataset):
         self.files = []
         for name in self.splits[split]:
             image = os.path.join(root, self.image_root, name) + "_RGBIR.tif"
-            mask = os.path.join(root, name) + "_label.tif"
+            mask = os.path.join(root, self.mask_root, name) + "_label.tif"
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 

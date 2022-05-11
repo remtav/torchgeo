@@ -3,9 +3,10 @@
 
 """Potsdam datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 
 import pytorch_lightning as pl
+from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
 
@@ -25,6 +26,7 @@ class Potsdam2DDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         batch_size: int = 64,
+        patch_size: int = 256,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         **kwargs: Any,
@@ -34,14 +36,41 @@ class Potsdam2DDataModule(pl.LightningDataModule):
         Args:
             root_dir: The ``root`` argument to pass to the Potsdam2D Dataset classes
             batch_size: The batch size to use in all created DataLoaders
+            patch_size: The size of each patch in pixels (test patches will be 1.5 times
+                this size)
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
+        self.patch_size = patch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+
+    def center_crop(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a center crop transform on a single sample.
+
+        Args:
+            size: output image size
+
+        Returns:
+            function to perform center crop
+        """
+
+        def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+
+            y1 = (height - size) // 2
+            x1 = (width - size) // 2
+            sample["image"] = sample["image"][:, y1: y1 + size, x1: x1 + size]
+            sample["mask"] = sample["mask"][y1: y1 + size, x1: x1 + size]
+
+            return sample
+
+        return center_crop_inner
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -64,7 +93,10 @@ class Potsdam2DDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        transforms = Compose([self.preprocess])
+        transforms = Compose([
+            self.center_crop(self.patch_size),
+            self.preprocess
+        ])
 
         dataset = Potsdam2D(self.root_dir, "train", transforms=transforms)
 
